@@ -1,6 +1,12 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
+using Checkout.AcmeBank;
+using Checkout.AcmeBank.Models;
+using Checkout.PaymentGateway.Business.Common;
 using Checkout.PaymentGateway.Business.Payments.Process;
+using Checkout.PaymentGateway.Data;
+using Checkout.PaymentGateway.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using NUnit.Framework;
 using System;
@@ -16,10 +22,12 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		private ProcessPaymentCommand _subject;
 		private ProcessPaymentCommandRequest _request;
 
-		private Mock<ICreditCardNumberValidator> _creditCardNumberValidatorMock;
-		private Mock<ICurrencyValidator> _currencyValidatorMock;
-		private Mock<IDateTimeProvider> _dateTimeProviderMock;
-		private DateTime _utcNow;
+		private AcmeProcessPaymentResult _acmeProcessPaymentResult;
+
+		private Mock<IProcessPaymentCommandRequestValidator> _processPaymentCommandRequestValidatorMock;
+		private Mock<IAcmeBankApi> _acmeBankApiMock;
+
+		private PaymentGatewayDatabaseContext _paymentGatewayDatabaseContext;
 
 		[OneTimeSetUp]
 		public void OneTimeSetUp()
@@ -27,9 +35,8 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 			_fixture = new Fixture()
 				.Customize(new AutoMoqCustomization());
 
-			_creditCardNumberValidatorMock = _fixture.Freeze<Mock<ICreditCardNumberValidator>>();
-			_currencyValidatorMock = _fixture.Freeze<Mock<ICurrencyValidator>>();
-			_dateTimeProviderMock = _fixture.Freeze<Mock<IDateTimeProvider>>();
+			_processPaymentCommandRequestValidatorMock = _fixture.Freeze<Mock<IProcessPaymentCommandRequestValidator>>();
+			_acmeBankApiMock = _fixture.Freeze<Mock<IAcmeBankApi>>();
 		}
 
 		[SetUp]
@@ -37,195 +44,89 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		{
 			_subject = _fixture.Create<ProcessPaymentCommand>();
 
-			_utcNow = _fixture.Create<DateTime>();
+			_request = _fixture.Create<ProcessPaymentCommandRequest>();
 
-			_request = new ProcessPaymentCommandRequest
+			_processPaymentCommandRequestValidatorMock.Setup(x => x.Validate(_request))
+				.Returns(Enumerable.Empty<ValidationError>());
+
+			_acmeProcessPaymentResult = new AcmeProcessPaymentResult
 			{
-				Amount = 12,
-				CreditCardNumber = "1234123412341234",
-				Currency = "GBP",
-				CVV = "123",
-				ExpiryMonth = _utcNow.Month,
-				ExpiryYear = _utcNow.Year + 1,
-				Reference = "Foo"
+				Id = Guid.NewGuid(),
+				WasSuccessful = true,
+				Error = null
 			};
+			_acmeBankApiMock.Setup(x => x.ProcessPayment(_request.CreditCardNumber, _request.CVV, _request.ExpiryMonth, _request.ExpiryYear, _request.Amount, _request.Currency, _request.CustomerName))
+				.ReturnsAsync(() => _acmeProcessPaymentResult);
 
-			_creditCardNumberValidatorMock.Setup(x => x.IsCreditCardNumberValid(_request.CreditCardNumber))
-				.Returns(true);
-			_currencyValidatorMock.Setup(x => x.IsCurrencySupported(_request.Currency))
-				.Returns(true);
-			_dateTimeProviderMock.Setup(x => x.UtcNow())
-				.Returns(() => _utcNow);
+			var options = new DbContextOptionsBuilder<PaymentGatewayDatabaseContext>()
+				.UseInMemoryDatabase(Guid.NewGuid().ToString())
+				.Options;
+
+			_paymentGatewayDatabaseContext = new PaymentGatewayDatabaseContext(options);
+			_fixture.Inject(_paymentGatewayDatabaseContext);
 		}
 
 		[TearDown]
 		public void TearDown()
 		{
-			_creditCardNumberValidatorMock.Reset();
-			_currencyValidatorMock.Reset();
+			_processPaymentCommandRequestValidatorMock.Reset();
 		}
 
 		[Test]
-		public void WhenRequestIsNull_ShouldThrowArgumentException()
-		{
-			// Arrange, Act
-			AsyncTestDelegate act = () => _subject.ExecuteAsync(null);
-
-			// Assert
-			Assert.That(act, Throws.TypeOf<ArgumentNullException>());
-		}
-
-		[Test]
-		public async Task ShouldValidateCreditCardNumber()
+		public async Task ShouldValidateRequest()
 		{
 			// Arrange, Act
 			await _subject.ExecuteAsync(_request);
 
 			// Assert
-			_creditCardNumberValidatorMock.Verify(x => x.IsCreditCardNumberValid(_request.CreditCardNumber));
+			_processPaymentCommandRequestValidatorMock.Verify(x => x.Validate(_request));
 		}
 
 		[Test]
-		public async Task WhenCardNumberIsNotValid_ShouldReturnValidationError()
+		public async Task WhenRequestIsInvalid_ShouldReturnErrors()
 		{
-			// Arrange 
-			_creditCardNumberValidatorMock.Setup(x => x.IsCreditCardNumberValid(_request.CreditCardNumber))
-				.Returns(false);
+			// Arrange
+			var expectedError = new ValidationError("foo", "bar");
+			_processPaymentCommandRequestValidatorMock.Setup(x => x.Validate(_request))
+				.Returns(new[] { expectedError });
 
 			// Act
 			var result = await _subject.ExecuteAsync(_request);
 
 			// Assert
 			Assert.That(result.Notification.HasErrors, Is.True);
-
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.EqualTo("CreditCardNumber"));
-			Assert.That(error.Error, Is.EqualTo("Credit card number is invalid"));
+			Assert.That(result.Notification.ValidationErrors.Single().Attribute, Is.EqualTo("foo"));
+			Assert.That(result.Notification.ValidationErrors.Single().Error, Is.EqualTo("bar"));
 		}
 
 		[Test]
-		public async Task WhenCurrencyCodeIsNotSupported_ShouldReturnValidationError()
+		public async Task ShouldMakePaymentRequestToBank()
 		{
-			// Arrange 
-			_currencyValidatorMock.Setup(x => x.IsCurrencySupported(_request.Currency))
-				.Returns(false);
-
-			// Act
+			// Arrange, Act
 			var result = await _subject.ExecuteAsync(_request);
 
 			// Assert
-			Assert.That(result.Notification.HasErrors, Is.True);
-
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.EqualTo("Currency"));
-			Assert.That(error.Error, Is.EqualTo("Currency not supported"));
+			_acmeBankApiMock.Verify(x => x.ProcessPayment(
+				_request.CreditCardNumber,
+				_request.CVV,
+				_request.ExpiryMonth,
+				_request.ExpiryYear,
+				_request.Amount,
+				_request.Currency,
+				_request.CustomerName));
 		}
 
 		[Test]
-		[TestCase(0)]
-		[TestCase(-1)]
-		[TestCase(-5)]
-		[TestCase(13)]
-		[TestCase(17)]
-		[TestCase(21)]
-		public async Task WhenExpiryMonthIsNotValid_ShouldReturnValidationError(int month)
+		public async Task ShouldPersistPaymentRequestDetails()
 		{
-			// Arrange 
-			_request.ExpiryMonth = month;
-
-			// Act
+			// Arrange, Act
 			var result = await _subject.ExecuteAsync(_request);
 
 			// Assert
-			Assert.That(result.Notification.HasErrors, Is.True);
+			var paymentRequest = _paymentGatewayDatabaseContext.PaymentRequests.SingleOrDefault();
 
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.EqualTo("ExpiryMonth"));
-			Assert.That(error.Error, Is.EqualTo("Invalid expiry month"));
-		}
-
-		[Test]
-		[TestCase(0)]
-		[TestCase(-1)]
-		[TestCase(-5)]
-		[TestCase(10000)]
-		[TestCase(10001)]
-		public async Task WhenExpiryYearIsNotValid_ShouldReturnValidationError(int year)
-		{
-			// Arrange 
-			_request.ExpiryYear = year;
-
-			// Act
-			var result = await _subject.ExecuteAsync(_request);
-
-			// Assert
-			Assert.That(result.Notification.HasErrors, Is.True);
-
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.EqualTo("ExpiryYear"));
-			Assert.That(error.Error, Is.EqualTo("Invalid expiry year"));
-		}
-
-		[Test]
-		[TestCase(-1)]
-		[TestCase(-11)]
-		public async Task WhenExpiryDateIsInThePast_ShouldReturnValidationError(int months)
-		{
-			// Arrange 
-			var previousMonth = _utcNow.AddMonths(months);
-			_request.ExpiryMonth = previousMonth.Month;
-			_request.ExpiryYear = previousMonth.Year;
-
-			// Act
-			var result = await _subject.ExecuteAsync(_request);
-
-			// Assert
-			Assert.That(result.Notification.HasErrors, Is.True);
-
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.Null);
-			Assert.That(error.Error, Is.EqualTo("Card has expired"));
-		}
-
-		[Test]
-		[TestCase(1)]
-		[TestCase(11)]
-		public async Task WhenExpiryDateIsInTheFuture_ShouldNotReturnValidationError(int months)
-		{
-			// Arrange 
-			var previousMonth = _utcNow.AddMonths(months);
-			_request.ExpiryMonth = previousMonth.Month;
-			_request.ExpiryYear = previousMonth.Year;
-
-			// Act
-			var result = await _subject.ExecuteAsync(_request);
-
-			// Assert
-			Assert.That(result.Notification.HasErrors, Is.False);
-		}
-
-		[Test]
-		public async Task WhenExpiryDateIsInTheSameMonth_ShouldReturnValidationErrors()
-		{
-			// Arrange 
-			_request.ExpiryMonth = _utcNow.Month;
-			_request.ExpiryYear = _utcNow.Year;
-
-			// Act
-			var result = await _subject.ExecuteAsync(_request);
-
-			// Assert
-			Assert.That(result.Notification.HasErrors, Is.True);
-
-			var error = result.Notification.ValidationErrors.Single();
-
-			Assert.That(error.Attribute, Is.Null);
-			Assert.That(error.Error, Is.EqualTo("Card has expired"));
+			Assert.That(paymentRequest, Is.Not.Null);
+			Assert.That(paymentRequest.Status, Is.EqualTo(PaymentRequestStatus.Successful));
 		}
 	}
 }

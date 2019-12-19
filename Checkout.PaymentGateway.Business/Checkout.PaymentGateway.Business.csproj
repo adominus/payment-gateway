@@ -4,4 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Checkout.AcmeBank\Checkout.AcmeBank.csproj" />
+    <ProjectReference Include="..\Checkout.PaymentGateway.Data\Checkout.PaymentGateway.Data.csproj" />
+    <ProjectReference Include="..\Checkout.PaymentGateway.Domain\Checkout.PaymentGateway.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

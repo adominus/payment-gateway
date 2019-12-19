@@ -5,6 +5,12 @@ namespace Checkout.PaymentGateway.Data
 {
 	public class PaymentGatewayDatabaseContext : DbContext
 	{
+		public PaymentGatewayDatabaseContext(DbContextOptions options) : base(options)
+		{ }
+
+		public PaymentGatewayDatabaseContext()
+		{ }
+
 		public DbSet<PaymentRequest> PaymentRequests { get; set; }
 	}
 }

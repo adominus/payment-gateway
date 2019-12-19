@@ -5,11 +5,15 @@ VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Checkout.PaymentGateway.Api", "Checkout.PaymentGateway.Api\Checkout.PaymentGateway.Api.csproj", "{983D7D0B-D3B0-4BFD-AC33-28B3A2A56E0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Checkout.PaymentGateway.Business", "Checkout.PaymentGateway.Business\Checkout.PaymentGateway.Business.csproj", "{FF621306-5346-4C99-B5F8-3690C70D85D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Checkout.PaymentGateway.Business", "Checkout.PaymentGateway.Business\Checkout.PaymentGateway.Business.csproj", "{FF621306-5346-4C99-B5F8-3690C70D85D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Checkout.PaymentGateway.Business.Tests", "Checkout.PaymentGateway.Business.Tests\Checkout.PaymentGateway.Business.Tests.csproj", "{A948AF5C-C848-42C3-93B3-4D6F6190900B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Checkout.PaymentGateway.Business.Tests", "Checkout.PaymentGateway.Business.Tests\Checkout.PaymentGateway.Business.Tests.csproj", "{A948AF5C-C848-42C3-93B3-4D6F6190900B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Checkout.PaymentGateway.Data", "Checkout.PaymentGateway.Data\Checkout.PaymentGateway.Data.csproj", "{34CBCF82-58FE-4307-8618-B2B9F66D50DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Checkout.PaymentGateway.Data", "Checkout.PaymentGateway.Data\Checkout.PaymentGateway.Data.csproj", "{34CBCF82-58FE-4307-8618-B2B9F66D50DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Checkout.AcmeBank", "Checkout.AcmeBank\Checkout.AcmeBank.csproj", "{415C504C-16F9-40FB-8D38-ED1CC18757E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Checkout.PaymentGateway.Domain", "Checkout.PaymentGateway.Domain\Checkout.PaymentGateway.Domain.csproj", "{38819A07-AE7F-4E58-84AA-0B222D441814}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{34CBCF82-58FE-4307-8618-B2B9F66D50DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34CBCF82-58FE-4307-8618-B2B9F66D50DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34CBCF82-58FE-4307-8618-B2B9F66D50DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{415C504C-16F9-40FB-8D38-ED1CC18757E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{415C504C-16F9-40FB-8D38-ED1CC18757E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{415C504C-16F9-40FB-8D38-ED1CC18757E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{415C504C-16F9-40FB-8D38-ED1CC18757E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38819A07-AE7F-4E58-84AA-0B222D441814}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38819A07-AE7F-4E58-84AA-0B222D441814}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38819A07-AE7F-4E58-84AA-0B222D441814}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38819A07-AE7F-4E58-84AA-0B222D441814}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
