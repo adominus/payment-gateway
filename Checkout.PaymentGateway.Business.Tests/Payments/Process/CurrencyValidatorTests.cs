@@ -1,7 +1,7 @@
 ﻿using Checkout.PaymentGateway.Business.Payments.Process;
 using NUnit.Framework;
 
-namespace Checkout.PaymentGateway.Business.Tests.Payments
+namespace Checkout.PaymentGateway.Business.Tests.Payments.Process
 {
 	public class CurrencyValidatorTests
 	{

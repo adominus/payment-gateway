@@ -5,7 +5,7 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 {
 	public interface IProcessPaymentCommandRequestValidator
 	{
-		IEnumerable<ValidationError> Validate(ProcessPaymentCommandRequest request);
+		IEnumerable<ValidationError> Validate(ProcessPaymentCommandRequestModel request);
 	}
 }
 

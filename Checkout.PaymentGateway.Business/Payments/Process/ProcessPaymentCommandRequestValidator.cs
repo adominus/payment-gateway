@@ -22,7 +22,7 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 			_dateTimeProvider = dateTimeProvider;
 		}
 
-		public IEnumerable<ValidationError> Validate(ProcessPaymentCommandRequest request)
+		public IEnumerable<ValidationError> Validate(ProcessPaymentCommandRequestModel request)
 		{
 			if (request == null)
 			{
@@ -39,6 +39,31 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 				yield return new ValidationError(nameof(request.Currency), "Currency not supported");
 			}
 
+			var expiryDateValidationError = ValidateExpiryDate(request);
+			if (expiryDateValidationError != null)
+			{
+				yield return expiryDateValidationError;
+			}
+
+			var cvvValidationError = ValidateCvv(request);
+			if (cvvValidationError != null)
+			{
+				yield return cvvValidationError;
+			}
+
+			if (request.Amount <= 0)
+			{
+				yield return new ValidationError(nameof(request.Amount), "Amount must be greater than zero");
+			}
+
+			if (string.IsNullOrWhiteSpace(request.CustomerName))
+			{
+				yield return new ValidationError(nameof(request.CustomerName), "Customer name must be provided");
+			}
+		}
+
+		private ValidationError ValidateExpiryDate(ProcessPaymentCommandRequestModel request)
+		{
 			if (DateTime.TryParseExact($"{request.ExpiryYear:0000}-{request.ExpiryMonth:00}-01T00:00:00.0000000Z",
 									   "yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'",
 									   CultureInfo.InvariantCulture,
@@ -50,30 +75,32 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 
 				if (expiryDate.Date <= firstOfCurrentMonth.Date)
 				{
-					yield return new ValidationError(null, "Card has expired");
+					return new ValidationError(null, "Card has expired");
 				}
 			}
 			else
 			{
-				yield return new ValidationError(null, "Invalid expiry date");
+				return new ValidationError(null, "Invalid expiry date");
 			}
 
+			return null;
+		}
+
+		private ValidationError ValidateCvv(ProcessPaymentCommandRequestModel request)
+		{
 			if (!string.IsNullOrWhiteSpace(request.CVV))
 			{
 				if (!request.CVV.All(Char.IsDigit))
 				{
-					yield return new ValidationError(nameof(request.CVV), "Invalid CVV");
+					return new ValidationError(nameof(request.CVV), "Invalid CVV");
 				}
 				else if (request.CVV.Length != 3 && request.CVV.Length != 4)
 				{
-					yield return new ValidationError(nameof(request.CVV), "Invalid CVV");
+					return new ValidationError(nameof(request.CVV), "Invalid CVV");
 				}
 			}
 
-			if (request.Amount <= 0)
-			{
-				yield return new ValidationError(nameof(request.Amount), "Amount must be greater than zero");
-			}
+			return null;
 		}
 	}
 }

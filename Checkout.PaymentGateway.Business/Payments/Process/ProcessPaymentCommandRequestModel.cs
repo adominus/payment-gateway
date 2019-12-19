@@ -1,6 +1,6 @@
 ﻿namespace Checkout.PaymentGateway.Business.Payments.Process
 {
-	public class ProcessPaymentCommandRequest
+	public class ProcessPaymentCommandRequestModel
 	{
 		public string CreditCardNumber { get; set; }
 		public string CVV { get; set; }
@@ -11,7 +11,6 @@
 		public decimal Amount { get; set; }
 		public string Currency { get; set; }
 
-		// TODO: Not tested 
 		public string CustomerName { get; set; }
 
 		public string Reference { get; set; }

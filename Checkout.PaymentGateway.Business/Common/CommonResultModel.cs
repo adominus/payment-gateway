@@ -1,10 +1,10 @@
 ﻿namespace Checkout.PaymentGateway.Business.Common
 {
-	public abstract class CommonResult
+	public abstract class CommonResultModel
 	{
 		public Notification Notification { get; set; }
 
-		public CommonResult()
+		public CommonResultModel()
 		{
 			Notification = new Notification();
 		}

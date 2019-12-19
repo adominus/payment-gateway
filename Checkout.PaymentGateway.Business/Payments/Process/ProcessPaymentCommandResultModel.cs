@@ -1,14 +1,13 @@
 ﻿using Checkout.PaymentGateway.Business.Common;
+using Checkout.PaymentGateway.Domain.Enums;
 using System;
 
 namespace Checkout.PaymentGateway.Business.Payments.Process
 {
-	public class ProcessPaymentCommandResult : CommonResult
+	public class ProcessPaymentCommandResultModel : CommonResultModel
 	{
 		public Guid PaymentRequestId { get; set; }
 
-
-		//  "response_code": "10000",
-		//"response_summary": "Approved",
+		public PaymentRequestStatus Status { get; set; }
 	}
 }

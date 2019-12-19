@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Checkout.PaymentGateway.Business.Payments.Process
 {
-	public class ProcessPaymentCommand
+	public class ProcessPaymentCommand : IProcessPaymentCommand
 	{
 		private readonly IProcessPaymentCommandRequestValidator _processPaymentCommandRequestValidator;
 		private readonly PaymentGatewayDatabaseContext _dbContext;
@@ -25,13 +25,13 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 			_acmeBankApi = acmeBankApi;
 		}
 
-		public async Task<ProcessPaymentCommandResult> ExecuteAsync(ProcessPaymentCommandRequest request)
+		public async Task<ProcessPaymentCommandResultModel> ExecuteAsync(ProcessPaymentCommandRequestModel request)
 		{
 			var errors = _processPaymentCommandRequestValidator.Validate(request);
 
 			if (errors.Any())
 			{
-				return new ProcessPaymentCommandResult
+				return new ProcessPaymentCommandResultModel
 				{
 					Notification = new Notification(errors)
 				};
@@ -59,13 +59,14 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 
 			await _dbContext.SaveChangesAsync();
 
-			return new ProcessPaymentCommandResult
+			return new ProcessPaymentCommandResultModel
 			{
-				PaymentRequestId = paymentRequest.Id
+				PaymentRequestId = paymentRequest.Id,
+				Status = status
 			};
 		}
 
-		private async Task<(Guid? Id, PaymentRequestStatus Status, string Error)> PostRequestToBankAsync(ProcessPaymentCommandRequest request)
+		private async Task<(Guid? Id, PaymentRequestStatus Status, string Error)> PostRequestToBankAsync(ProcessPaymentCommandRequestModel request)
 		{
 			try
 			{

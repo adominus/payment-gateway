@@ -8,14 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Checkout.PaymentGateway.Business.Tests.Payments
+namespace Checkout.PaymentGateway.Business.Tests.Payments.Process
 {
 	public class ProcessPaymentCommandRequestValidatorTests
 	{
 		private IFixture _fixture;
 
 		private ProcessPaymentCommandRequestValidator _subject;
-		private ProcessPaymentCommandRequest _request;
+		private ProcessPaymentCommandRequestModel _request;
 
 		private Mock<ICreditCardNumberValidator> _creditCardNumberValidatorMock;
 		private Mock<ICurrencyValidator> _currencyValidatorMock;
@@ -40,7 +40,7 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 
 			_utcNow = _fixture.Create<DateTime>();
 
-			_request = new ProcessPaymentCommandRequest
+			_request = new ProcessPaymentCommandRequestModel
 			{
 				Amount = 12,
 				CreditCardNumber = "1234123412341234",
@@ -48,7 +48,8 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 				CVV = "123",
 				ExpiryMonth = _utcNow.Month,
 				ExpiryYear = _utcNow.Year + 1,
-				Reference = "Foo"
+				Reference = "Foo",
+				CustomerName = "Bar",
 			};
 
 			_creditCardNumberValidatorMock.Setup(x => x.IsCreditCardNumberValid(_request.CreditCardNumber))
@@ -264,6 +265,22 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 
 			// Assert
 			AssertSingleErrorMatches(validationErrors, "Amount", "Amount must be greater than zero");
+		}
+
+		[Test]
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase(" ")]
+		public void WhenCustomerNameIsNullOrWhitespace_ShouldReturnValidationErrors(string customerName)
+		{
+			// Arrange 
+			_request.CustomerName = customerName;
+
+			// Act
+			var validationErrors = _subject.Validate(_request);
+
+			// Assert
+			AssertSingleErrorMatches(validationErrors, "CustomerName", "Customer name must be provided");
 		}
 
 		private void AssertSingleErrorMatches(IEnumerable<ValidationError> validationErrors, string error)

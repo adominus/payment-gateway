@@ -13,14 +13,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Checkout.PaymentGateway.Business.Tests.Payments
+namespace Checkout.PaymentGateway.Business.Tests.Payments.Process
 {
 	public class ProcessPaymentCommandTests
 	{
 		private IFixture _fixture;
 
 		private ProcessPaymentCommand _subject;
-		private ProcessPaymentCommandRequest _request;
+		private ProcessPaymentCommandRequestModel _request;
 
 		private AcmeProcessPaymentResult _acmeProcessPaymentResult;
 
@@ -42,7 +42,7 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		[SetUp]
 		public void SetUp()
 		{
-			_request = _fixture.Create<ProcessPaymentCommandRequest>();
+			_request = _fixture.Create<ProcessPaymentCommandRequestModel>();
 
 			_processPaymentCommandRequestValidatorMock.Setup(x => x.Validate(_request))
 				.Returns(Enumerable.Empty<ValidationError>());
@@ -171,12 +171,35 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		}
 
 		[Test]
+		public async Task ShouldReturnStatus()
+		{
+			// Arrange, Act
+			var result = await _subject.ExecuteAsync(_request);
+
+			// Assert
+			Assert.That(result.Status, Is.EqualTo(PaymentRequestStatus.Successful));
+		}
+
+		[Test]
+		public async Task WhenBankFailsToProcess_ShouldReturnFailedStatus()
+		{
+			// Arrange
+			_acmeProcessPaymentResult.WasSuccessful = false;
+
+			// Act
+			var result = await _subject.ExecuteAsync(_request);
+
+			// Assert
+			Assert.That(result.Status, Is.EqualTo(PaymentRequestStatus.Unsuccessful));
+		}
+
+		[Test]
 		public async Task WhenBankFailsToProcess_ShouldPersistUnsuccessfulPaymentRequest()
 		{
 			// Arrange
 			_acmeProcessPaymentResult.WasSuccessful = false;
 			_acmeProcessPaymentResult.Error = "foo";
-			
+
 			// Act
 			await _subject.ExecuteAsync(_request);
 
@@ -194,7 +217,7 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		{
 			// Arrange
 			_acmeProcessPaymentResult.WasSuccessful = false;
-			
+
 			// Act
 			await _subject.ExecuteAsync(_request);
 
@@ -208,11 +231,8 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 		public async Task WhenBankThrowsError_ShouldPersistRequestAsUnableToProcess()
 		{
 			// Arrange
-			_acmeBankApiMock.Setup(x => x.ProcessPayment(_request.CreditCardNumber, _request.CVV, _request.ExpiryMonth, _request.ExpiryYear, _request.Amount, _request.Currency, _request.CustomerName))
-				.ThrowsAsync(Refit.ApiException.Create(null,
-					System.Net.Http.HttpMethod.Post,
-					new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)).Result);
-			
+			SetupBankThrowsError();
+
 			// Act
 			await _subject.ExecuteAsync(_request);
 
@@ -223,6 +243,42 @@ namespace Checkout.PaymentGateway.Business.Tests.Payments
 
 			Assert.That(paymentRequest.BankTransactionId, Is.Null);
 			Assert.That(paymentRequest.BankErrorDescription, Is.EqualTo("Unable to process with bank"));
+		}
+
+		[Test]
+		public async Task WhenBankThrowsError_ShouldPersistRequestDetails()
+		{
+			// Arrange
+			SetupBankThrowsError();
+
+			// Act
+			await _subject.ExecuteAsync(_request);
+
+			// Assert
+			var paymentRequest = _paymentGatewayDatabaseContext.PaymentRequests.Single();
+
+			AssertPaymentRequestDetailsMatchEntity(paymentRequest);
+		}
+
+		[Test]
+		public async Task WhenBankThrowsError_ShouldReturnUnableToProcessStatus()
+		{
+			// Arrange
+			SetupBankThrowsError();
+
+			// Act
+			var result = await _subject.ExecuteAsync(_request);
+
+			// Assert
+			Assert.That(result.Status, Is.EqualTo(PaymentRequestStatus.UnableToProcess));
+		}
+
+		private void SetupBankThrowsError()
+		{
+			_acmeBankApiMock.Setup(x => x.ProcessPayment(_request.CreditCardNumber, _request.CVV, _request.ExpiryMonth, _request.ExpiryYear, _request.Amount, _request.Currency, _request.CustomerName))
+				.ThrowsAsync(Refit.ApiException.Create(null,
+					System.Net.Http.HttpMethod.Post,
+					new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)).Result);
 		}
 
 		private void AssertPaymentRequestDetailsMatchEntity(Data.Entities.PaymentRequest paymentRequest)
