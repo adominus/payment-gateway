@@ -82,7 +82,7 @@ namespace Checkout.PaymentGateway.Business.Payments.Process
 					bankResult.WasSuccessful ? PaymentRequestStatus.Successful : PaymentRequestStatus.Unsuccessful,
 					bankResult.Error);
 			}
-			catch (Refit.ApiException)
+			catch (Exception)
 			{
 				return (null, PaymentRequestStatus.UnableToProcess, "Unable to process with bank");
 			}

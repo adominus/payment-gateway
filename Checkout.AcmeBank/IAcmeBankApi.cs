@@ -6,7 +6,7 @@ namespace Checkout.AcmeBank
 {
 	public interface IAcmeBankApi
 	{
-		[Post("payment/process")]
+		[Post("/payment/process")]
 		Task<AcmeProcessPaymentResult> ProcessPayment(
 			string creditCardNumber,
 			string cvv,
