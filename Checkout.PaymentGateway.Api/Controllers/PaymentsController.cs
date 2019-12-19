@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Checkout.PaymentGateway.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class PaymentsController : ControllerBase
     {
         private readonly IProcessPaymentCommand _processPaymentCommand;
@@ -23,20 +23,9 @@ namespace Checkout.PaymentGateway.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ProcessPaymentRequest()
+        public async Task<IActionResult> ProcessPaymentRequest(ProcessPaymentCommandRequestModel request)
         {
-            // TODO: This is just for testing
-            var result = await _processPaymentCommand.ExecuteAsync(new ProcessPaymentCommandRequestModel
-            {
-                Amount = 123,
-                CreditCardNumber = "111111111113",
-                Currency = "GBP",
-                CustomerName = "John Smith",
-                CVV = "123",
-                ExpiryMonth = 12,
-                ExpiryYear = 2020,
-                Reference = "Abc"
-            });
+            var result = await _processPaymentCommand.ExecuteAsync(request);
 
             if (result.Notification.HasErrors)
             {

@@ -42,7 +42,7 @@ namespace Checkout.PaymentGateway.Api
 			services.AddScoped<IProcessPaymentCommandRequestValidator, ProcessPaymentCommandRequestValidator>();
 
 			services.AddRefitClient<IAcmeBankApi>()
-				.ConfigureHttpClient(x => x.BaseAddress = new Uri("http://localhost:123"));
+				.ConfigureHttpClient(x => x.BaseAddress = new Uri("http://localhost:8000"));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
