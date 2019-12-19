@@ -7,11 +7,12 @@ namespace Checkout.PaymentGateway.Data.Entities
 	{
 		public Guid Id { get; set; }
 
-		public DateTime CreatedAt { get; set; }
+		// ? 
+		//public DateTime CreatedAt { get; set; }
 
 		public PaymentRequestStatus Status { get; set; }
 
-		public Guid BankTransactionId { get; set; }
+		public Guid? BankTransactionId { get; set; }
 		public string BankErrorDescription { get; set; }
 
 		public string CreditCardNumber { get; set; }

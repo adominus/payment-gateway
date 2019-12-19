@@ -3,6 +3,7 @@
 	public enum PaymentRequestStatus
 	{
 		Successful = 1,
-		Unsuccessful = 2
+		Unsuccessful = 2,
+		UnableToProcess = 3
 	}
 }
