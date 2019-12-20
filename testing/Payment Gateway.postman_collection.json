@@ -1,0 +1,80 @@
+{
+	"info": {
+		"_postman_id": "ee1e6e78-d785-4cd0-8e4a-5e16ba968e61",
+		"name": "Payment Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Make Payment Request",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a4818ae4-7004-4974-a1da-d8498fc92e2e",
+						"exec": [
+							"",
+							"if (pm.response.code == 201) {",
+							"    pm.environment.set(\"PaymentRequestId\", pm.response.json().paymentRequestId);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Amount\": 100,\r\n    \"CreditCardNumber\": \"111111111113\",\r\n    \"Currency\": \"GBP\",\r\n    \"CustomerName\": \"John Smith\",\r\n    \"CVV\": \"123\",\r\n    \"ExpiryMonth\": 12,\r\n    \"ExpiryYear\": 2020,\r\n    \"Reference\": \"Abc\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/payments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"payments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Payment Request",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/payments/{{PaymentRequestId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"payments",
+						"{{PaymentRequestId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

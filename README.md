@@ -8,13 +8,9 @@ Then to run the payment gateway you can run:
 
 `dotnet run --project Checkout.PaymentGateway.Api/Checkout.PaymentGateway.Api.csproj`
 
-By default the gateway runs on port `5000` for HTTP and `5001` for HTTPs.
-
 To run the simulated bank run: 
 
 `dotnet run --project Checkout.AcmeBank.Simulator/Checkout.AcmeBank.Simulator.csproj`
-
-By default the simulated bank runs on port `8000` for HTTP and `8001` for HTTPs.
 
 To run both simultaneously (if you don't wish to use 2 terminals) you can run them both in the background with: 
 
@@ -26,7 +22,16 @@ Then to end them both you can run:
 
 The above assumes that the result of `jobs` returns just these 2 processes in the background.  
 
-## Tests 
+## Testing 
+By default the gateway runs on port `5000` for HTTP and `5001` for HTTPs. 
+
+By default the simulated bank runs on port `8000` for HTTP and `8001` for HTTPs.
+
+The simulated bank is setup to allow any request where the `amount <= 100`. Greater than that and it will process as `unsuccessful` with an `Insufficient Funds` error message.     
+
+There is a postman collection at `testing/Payment Gateway.postman_collection.json`. This includes the 2 requests documented below with a default body. The resulting response id from the `Make Payment Request` will get populated into a variable `{{PaymentRequestId}}` which can then be used to call `Get Payment Request`. 
+
+## Running Unit and Acceptance Tests 
 From the root of the project you can run the following: 
 
 `dotnet test Checkout.PaymentGateway.sln -v n`
@@ -141,4 +146,6 @@ Much more information could be processed for a payment request. For example, it 
 ## Documentation 
 - We could use something like swagger to document the endpoints
 
+## General 
+- The bank API URL should be loaded via configuration along with any credentials/API keys 
 
