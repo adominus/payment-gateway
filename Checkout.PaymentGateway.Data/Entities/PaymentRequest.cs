@@ -7,9 +7,6 @@ namespace Checkout.PaymentGateway.Data.Entities
 	{
 		public Guid Id { get; set; }
 
-		// ? 
-		//public DateTime CreatedAt { get; set; }
-
 		public PaymentRequestStatus Status { get; set; }
 
 		public Guid? BankTransactionId { get; set; }
