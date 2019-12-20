@@ -29,7 +29,7 @@ By default the simulated bank runs on port `8000` for HTTP and `8001` for HTTPs.
 
 The simulated bank is setup to allow any request where the `amount <= 100`. Greater than that and it will process as `unsuccessful` with an `Insufficient Funds` error message.     
 
-There is a postman collection at `testing/Payment Gateway.postman_collection.json`. This includes the 2 requests documented below with a default body. The resulting response id from the `Make Payment Request` will get populated into a variable `{{PaymentRequestId}}` which can then be used to call `Get Payment Request`. 
+There is a postman collection at `testing/Payment Gateway.postman_collection.json`. This includes the 2 requests documented below with a default body for `Make Payment Request`. The resulting response ID from the `Make Payment Request` will get populated into a variable `{{PaymentRequestId}}` which can then be used to call `Get Payment Request`. 
 
 ## Running Unit and Acceptance Tests 
 From the root of the project you can run the following: 
