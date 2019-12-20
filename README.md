@@ -37,23 +37,23 @@ From the root of the project you can run the following:
 `POST /payments` 
 
 Body: 
-`string CreditCardNumber` **required**
-`string CVV` *3 or 4 characters if provided*
+- `string CreditCardNumber` **required**
+- `string CVV` *3 or 4 characters if provided*
 
-`int ExpiryMonth` **required**
-`int ExpiryYear` **required**
+- `int ExpiryMonth` **required**
+- `int ExpiryYear` **required**
 
-`decimal Amount` **required**
-`string Currency` **required** *3 character ISO currency code*
+- `decimal Amount` **required**
+- `string Currency` **required** *3 character ISO currency code*
 
-`string CustomerName` **required**
-`string Reference`
+- `string CustomerName` **required**
+- `string Reference`
 
 ### Responses
 #### 201 Created
 
-`Guid PaymentRequestId`
-`int Status` where int is one of: 
+- `Guid PaymentRequestId`
+- `int Status` where int is one of: 
 ```
     Successful = 1,
     Unsuccessful = 2,
@@ -70,8 +70,8 @@ Example response:
 
 #### 400 Bad Request
 Returns an array of objects with the schema: 
-`string Attribute`
-`string Error`
+- `string Attribute`
+- `string Error`
 
 Example response: 
 ```
@@ -92,22 +92,22 @@ Example response:
 `GET /payments/{paymentRequestId}` 
 ### Response
 
-`Guid PaymentRequestId`
-`int Status` where int is one of: 
+- `Guid PaymentRequestId`
+- `int Status` where int is one of: 
 ```
     Successful = 1,
     Unsuccessful = 2,
     UnableToProcess = 3
 ```
-`Guid? BankTransactionId`
-`string BankErrorDescription`
-`string MaskedCreditCardNumber`
-`int ExpiryMonth`
-`int ExpiryYear`
-`decimal Amount`
-`string Currency`
-`string CustomerName`
-`string Reference`
+- `Guid? BankTransactionId`
+- `string BankErrorDescription`
+- `string MaskedCreditCardNumber`
+- `int ExpiryMonth`
+- `int ExpiryYear`
+- `decimal Amount`
+- `string Currency`
+- `string CustomerName`
+- `string Reference`
 
 Example response: 
 ```
