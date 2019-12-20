@@ -8,9 +8,13 @@ Then to run the payment gateway you can run:
 
 `dotnet run --project Checkout.PaymentGateway.Api/Checkout.PaymentGateway.Api.csproj`
 
+By default the gateway runs on port `5000` for HTTP and `5001` for HTTPs.
+
 To run the simulated bank run: 
 
 `dotnet run --project Checkout.AcmeBank.Simulator/Checkout.AcmeBank.Simulator.csproj`
+
+By default the simulated bank runs on port `8000` for HTTP and `8001` for HTTPs.
 
 To run both simultaneously (if you don't wish to use 2 terminals) you can run them both in the background with: 
 
@@ -27,6 +31,101 @@ From the root of the project you can run the following:
 
 `dotnet test Checkout.PaymentGateway.sln -v n`
 
+# Endpoints 
+## Creating a payment request 
+### Request
+`POST /payments` 
+
+Body: 
+`string CreditCardNumber` **required**
+`string CVV` *3 or 4 characters if provided*
+
+`int ExpiryMonth` **required**
+`int ExpiryYear` **required**
+
+`decimal Amount` **required**
+`string Currency` **required** *3 character ISO currency code*
+
+`string CustomerName` **required**
+`string Reference`
+
+### Responses
+#### 201 Created
+
+`Guid PaymentRequestId`
+`int Status` where int is one of: 
+```
+    Successful = 1,
+    Unsuccessful = 2,
+    UnableToProcess = 3
+```
+
+Example response: 
+```
+{
+    "paymentRequestId": "1ac23ee1-8a10-452b-a0e1-179f6c81870e",
+    "status": 1
+}
+```
+
+#### 400 Bad Request
+Returns an array of objects with the schema: 
+`string Attribute`
+`string Error`
+
+Example response: 
+```
+[
+    {
+        "attribute": "CreditCardNumber",
+        "error": "Credit card number is invalid"
+    },
+    {
+        "attribute": "Currency",
+        "error": "Currency not supported"
+    }
+]
+```
+
+## Retrieving a payment request 
+### Request
+`GET /payments/{paymentRequestId}` 
+### Response
+
+`Guid PaymentRequestId`
+`int Status` where int is one of: 
+```
+    Successful = 1,
+    Unsuccessful = 2,
+    UnableToProcess = 3
+```
+`Guid? BankTransactionId`
+`string BankErrorDescription`
+`string MaskedCreditCardNumber`
+`int ExpiryMonth`
+`int ExpiryYear`
+`decimal Amount`
+`string Currency`
+`string CustomerName`
+`string Reference`
+
+Example response: 
+```
+{
+    "paymentRequestId": "1ac23ee1-8a10-452b-a0e1-179f6c81870e",
+    "status": 1,
+    "bankTransactionId": "ffa036a2-cbdc-4668-962f-7f4059204cd3",
+    "bankErrorDescription": null,
+    "maskedCreditCardNumber": "********1113",
+    "expiryMonth": 12,
+    "expiryYear": 2020,
+    "amount": 100,
+    "currency": "GBP",
+    "customerName": "John Smith",
+    "reference": "Abc"
+}
+```
+
 # Considerations & Assumptions 
 ## Payment Requests 
 Much more information could be processed for a payment request. For example, it does not address any of the following: 
@@ -38,5 +137,8 @@ Much more information could be processed for a payment request. For example, it 
     - Customer shipping addresses
     - Customer contact information
     - It should be able to determine what merchant is making the request
+
+## Documentation 
+- We could use something like swagger to document the endpoints
 
 

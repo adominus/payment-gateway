@@ -33,7 +33,11 @@ namespace Checkout.PaymentGateway.Api.Controllers
             }
             else
             {
-                return Created($"payments/{result.PaymentRequestId}", result);
+                return Created($"payments/{result.PaymentRequestId}", new
+                {
+                    result.PaymentRequestId,
+                    result.Status
+                });
             }
         }
 
